@@ -7,9 +7,10 @@ assistant = pc.assistant.Assistant("agenda")
 from pinecone_plugins.assistant.models.chat import Message
 
 msg = Message(
-    content="tell what is coding club doing",
+    content="tell what is coding club doing", ### here is where we change  for custom message
     role="user"  # either "user" or "assistant"
 )
+
 
 assistant.chat_completions(messages=[msg])
 
@@ -19,6 +20,7 @@ from IPython.display import Markdown as md
 #assert complete == len(files), "make sure the above says '48 of 48 files are complete'"
 
 # now run completion
+###
 out = assistant.chat_completions(messages=[msg])
 md(out["choices"][0]["message"]["content"])
 
@@ -41,4 +43,4 @@ def chat(message: str):
     chat_history.extend([msg, Message(**assistant_msg)])
     return md(assistant_msg["content"])
 
-chat("tell me about coding club")
+#chat("tell me about coding club")

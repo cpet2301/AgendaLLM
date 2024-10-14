@@ -1,19 +1,12 @@
 from pinecone import Pinecone
 pc = Pinecone(api_key="4345f2c9-08f6-4f69-bcd6-3e78766b068d")
-metadata = {"author": "Jane Doe", "version": "1.0"}
+metadata = {"author": "Parker", "version": "1.0"}
 assistant = pc.assistant.Assistant("agenda")
 
 #print(pc.assistant.list_assistants())
 
 
 from pinecone_plugins.assistant.models.chat import Message
-
-# msg = Message(
-#     content="the agenda on october 10",
-#     role="user"  # either "user" or "assistant"
-# )
-
-#assistant.chat_completions(messages=[msg])
 
 from pathlib import Path
 
@@ -50,36 +43,5 @@ for file_info in files:
 
 print(f"{complete} of {len(files)} files are complete")
 
-from pinecone_plugins.assistant.models.chat import Message
-
-msg = Message(
-    content="tell me about the Mixtral 8x7B model",
-    role="user"  # either "user" or "assistant"
-)
-
-assistant.chat_completions(messages=[msg])
-
-from IPython.display import Markdown as md
-
 # quick check that we're not getting ahead of ourselves
 #assert complete == len(files), "make sure the above says '48 of 48 files are complete'"
-
-# now run completion
-out = assistant.chat_completions(messages=[msg])
-md(out["choices"][0]["message"]["content"])
-
-
-chat_history = [
-    msg,
-    Message(**out.choices[0].message.to_dict())
-]
-
-def chat(message: str):
-    # create Message object
-    msg = Message(content=message, role="user")
-    # get response from assistant
-    out = assistant.chat_completions(messages=[msg])
-    assistant_msg = out.choices[0].message.to_dict()
-    # add to chat_history
-    chat_history.extend([msg, Message(**assistant_msg)])
-    return md(assistant_msg["content"])
