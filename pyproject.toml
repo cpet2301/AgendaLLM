@@ -1,12 +1,15 @@
 [tool.poetry]
-name = "agendallm"
+name = "agenda-llm"
 version = "0.1.0"
-description = ""
-authors = ["elftmann1 <elfman531@gmail.com>"]
+description = "TODO caleb fill this out"
+authors = ["Your Name <you@example.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.12"
+pinecone = "^5.3.1"
+streamlit = "^1.38.0"
 
 
 [build-system]
