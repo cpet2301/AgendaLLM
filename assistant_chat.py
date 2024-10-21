@@ -1,5 +1,6 @@
 from pinecone import Pinecone
-pc = Pinecone(api_key="4345f2c9-08f6-4f69-bcd6-3e78766b068d")
+import creds
+pc = Pinecone(creds.api_key)
 metadata = {"author": "Jparker", "version": "1.0"}
 assistant = pc.assistant.Assistant("agenda")
 
