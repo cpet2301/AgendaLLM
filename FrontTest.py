@@ -1,11 +1,12 @@
+import streamlit as st
+import pandas as pd
+import random
+import time
 from openai import OpenAI
 import pinecone
-import streamlit as st
 
 # OpenAI client
 client = OpenAI()
-
-# Create a Pinecone client instance
 pc = pinecone.Pinecone()
 index = pc.Index("testing")
 
