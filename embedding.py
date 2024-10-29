@@ -6,14 +6,14 @@ import xml.etree.ElementTree as ET
 import pytesseract
 from PIL import Image
 from PyPDF2 import PdfReader
-import io
+import secret
 
 
 # Initialize OpenAI client
-client = OpenAI(api_key="INSERT_OPENAI_API_KEY")
+client = OpenAI(api_key=secret.openai_key)
 
 # Initialize Pinecone
-pc = Pinecone(api_key="INSERT_PINECONE_API_KEY", environment="us-east-1-aws-free")
+pc = Pinecone(api_key=secret.pinecone_key, environment="us-east-1-aws-free")
 index = pc.Index("testing")
 
 def get_openai_embedding(text):

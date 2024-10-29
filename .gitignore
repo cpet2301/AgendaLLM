@@ -1,4 +1,4 @@
-secret.txt
+secret.*
 
 __pycache__/
 *.pyc
