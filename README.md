@@ -1,3 +1,9 @@
 # Agenda LLM
 
-### Hello world
+## Contributers
+
+### ...
+
+## Development Setup
+
+### In order to setup ... (fill this in!)

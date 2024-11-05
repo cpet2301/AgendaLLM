@@ -1,0 +1,10 @@
+secret.*
+creds.py
+
+__pycache__/
+*.pyc
+*.log
+
+node_modules/
+
+.env
