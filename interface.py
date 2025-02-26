@@ -15,10 +15,11 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # File uploader initialization
-uploaded_file = st.file_uploader(
-    "Upload a file (PDF, XML, CSV, PNG, JPG, JPEG)", 
-    type=["pdf", "xml", "csv", "png", "jpg", "jpeg"]
-)
+with st.sidebar:
+    uploaded_file = st.file_uploader(
+        "Upload a file (PDF, XML, CSV, PNG, JPG, JPEG)", 
+        type=["pdf", "xml", "csv", "png", "jpg", "jpeg"]
+    )
 
 if uploaded_file:
     try:
