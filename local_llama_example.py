@@ -1,7 +1,7 @@
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM #pip install -U langchain-ollama
 
-llm = Ollama(model="llama2")
-prompt = "Tell me a joke about llama"
+llm = OllamaLLM(model="codellama:7b")  # Use the correct model name
+prompt = "tell a funny joke"
 
-for chunks in llm.stream(prompt):
-    print(chunks, end="")
+for chunk in llm.stream(prompt):
+    print(chunk.content if hasattr(chunk, "content") else chunk, end="")

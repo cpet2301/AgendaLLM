@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 from pinecone.grpc import PineconeGRPC as Pinecone
 from openai import OpenAI
@@ -6,23 +7,29 @@ import xml.etree.ElementTree as ET
 import pytesseract
 from PIL import Image
 from PyPDF2 import PdfReader
-import secret
+import ollama
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
-# Initialize OpenAI client
-client = OpenAI(api_key=secret.openai_key)
+# Retrieve API keys from environment variables
+pinecone_api_key = os.getenv("PINECONE_KEY")
 
 # Initialize Pinecone
-pc = Pinecone(api_key=secret.pinecone_key, environment="us-east-1-aws-free")
-index = pc.Index("testing")
+if not pinecone_api_key:
+    st.error("Pinecone API key is missing. Please check your .env file.")
+else:
+    pc = Pinecone(api_key=pinecone_api_key, environment="us-east-1-aws-free")
+    index = pc.Index("testing")
 
-def get_openai_embedding(text):
-    """Vectorizes texts via an embedding model."""
+def get_local_embedding(text):
+    """Vectorizes text using a local Ollama embedding model."""
     try:
-        response = client.embeddings.create(input=text, model="text-embedding-ada-002")
-        return response.data[0].embedding
+        response = ollama.embeddings(model="nomic-embed-text", prompt=text)
+        return response["embedding"]
     except Exception as e:
-        st.error(f"Error generating embedding: {e}")
+        print(f"Error generating embedding: {e}")
         return None
     
 def query_pinecone(embedding):
@@ -80,7 +87,7 @@ def process_uploaded_file(uploaded_file):
         # Convert CSV text on each row into embeddings
         for index, row in df.iterrows():
             text = row[text_column]
-            embedding = get_openai_embedding(text)
+            embedding = get_local_embedding(text)
             if embedding:
                 upsert_to_pinecone(str(index), embedding, text)
 
@@ -97,7 +104,7 @@ def process_uploaded_file(uploaded_file):
         st.write("Extracted Text from PDF:")
         st.text(pdf_text)
         
-        embedding = get_openai_embedding(pdf_text)
+        embedding = get_local_embedding(pdf_text)
         if embedding:
             upsert_to_pinecone(uploaded_file.name, embedding, pdf_text)
 
@@ -110,7 +117,7 @@ def process_uploaded_file(uploaded_file):
         st.write("Extracted Text from XML:")
         st.text(xml_text)
         
-        embedding = get_openai_embedding(xml_text)
+        embedding = get_local_embedding(xml_text)
         if embedding:
             upsert_to_pinecone(uploaded_file.name, embedding, xml_text)
 
@@ -125,7 +132,7 @@ def process_uploaded_file(uploaded_file):
             st.write("Extracted Text from Image:")
             st.text(img_text)
             
-            embedding = get_openai_embedding(img_text)
+            embedding = get_local_embedding(img_text)
             if embedding:
                 upsert_to_pinecone(uploaded_file.name, embedding, img_text)
         

@@ -7,7 +7,7 @@
 ## Development Setup
     ### VENV
      1.  python -m venv myenv
-     2.  source myenv/bin/activate
+     2.  source myenv/Scripts/activate
      3.  pip install -r requierments.txt
     ### Local LLama
 
