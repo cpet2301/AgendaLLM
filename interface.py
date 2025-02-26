@@ -1,5 +1,7 @@
 import streamlit as st
 import embedding
+import ollama
+
     
 st.title("Agenda LLM")
 
@@ -35,32 +37,42 @@ if prompt := st.chat_input("Ask me anything!"):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Convert user message to an embedding using OpenAI
-    user_embedding = embedding.get_openai_embedding(prompt)
+    # Convert user message to an embedding using localllm
+    user_embedding = embedding.get_local_embedding(prompt)
 
     if user_embedding:
-        # Query Pinecone for the most relevant context
+    # Query Pinecone for the most relevant context
         retrieved_texts = embedding.query_pinecone(user_embedding)
 
-        # Generate OpenAI assistant response
-        with st.chat_message("assistant"):
-            messages_for_openai = [{"role": "system", "content": "You are a helpful assistant answering the prompt of the user."}]
-            messages_for_openai += st.session_state.messages
+        # Prepare conversation history
+        messages_for_llama = [
+            {"role": "system", "content": "You are a helpful assistant answering the prompt of the user."}
+        ]
+        
+        # Initialize chat history if not set
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
 
-            if retrieved_texts:
-                messages_for_openai.append({"role": "system", "content": f"Relevant information: {retrieved_texts}"})
+        messages_for_llama += st.session_state.messages
 
-            try:
-                response = embedding.client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=messages_for_openai
-                )
+        # Include retrieved context if available
+        if retrieved_texts:
+            messages_for_llama.append({"role": "system", "content": f"Relevant information: {retrieved_texts}"})
 
-                response_content = response.choices[0].message.content
+        try:
+            # Generate response using local Ollama model
+            response = ollama.chat(model="codellama:7b", messages=messages_for_llama)
+
+            # Extract the assistant's response
+            response_content = response["message"]["content"]
+
+            # Display the response
+            with st.chat_message("assistant"):
                 st.markdown(response_content)
-            except Exception as e:
-                st.error(f"Error generating assistant response: {e}")
-                response_content = "Sorry, I couldn't generate a response. Please try again."
 
-            # Add assistant response to chat history
-            st.session_state.messages.append({"role": "assistant", "content": response_content})
+        except Exception as e:
+            st.error(f"Error generating assistant response: {e}")
+            response_content = "Sorry, I couldn't generate a response. Please try again."
+
+        # Add assistant response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": response_content})
