@@ -72,8 +72,6 @@ def process_uploaded_file(uploaded_file):
     # Process CSV file
     if file_type == "text/csv":
         df = pd.read_csv(uploaded_file)
-        st.write("CSV File Uploaded:")
-        st.dataframe(df)
         
         # Call helper function to begin embedding process
         text_column = detect_text_column(df)
@@ -100,9 +98,6 @@ def process_uploaded_file(uploaded_file):
             if page_text != None:
                 pdf_text += page_text
         
-        st.write("Extracted Text from PDF:")
-        st.text(pdf_text)
-        
         embedding = get_local_embedding(pdf_text)
         if embedding:
             vector_upsert(uploaded_file.name, embedding, pdf_text)
@@ -112,9 +107,6 @@ def process_uploaded_file(uploaded_file):
         tree = ET.parse(uploaded_file)
         root = tree.getroot()
         xml_text = ET.tostring(root, encoding="unicode", method="text")
-        
-        st.write("Extracted Text from XML:")
-        st.text(xml_text)
         
         embedding = get_local_embedding(xml_text)
         if embedding:
@@ -128,9 +120,6 @@ def process_uploaded_file(uploaded_file):
         img_text = pytesseract.image_to_string(img)
         
         if img_text.strip():
-            st.write("Extracted Text from Image:")
-            st.text(img_text)
-            
             embedding = get_local_embedding(img_text)
             if embedding:
                 vector_upsert(uploaded_file.name, embedding, img_text)
