@@ -1,7 +1,5 @@
 import os
 import streamlit as st
-from pinecone.grpc import PineconeGRPC as Pinecone
-from openai import OpenAI
 import pandas as pd
 import xml.etree.ElementTree as ET
 import pytesseract
@@ -9,19 +7,27 @@ from PIL import Image
 from PyPDF2 import PdfReader
 import ollama
 from dotenv import load_dotenv
+import chromadb
+
+VECTOR_DB = "ChromaDB"
+COLLECTION_NAME = "rag_collection"
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Retrieve API keys from environment variables
-pinecone_api_key = os.getenv("PINECONE_KEY")
+# Create a Chroma Client with persistent storage
+persist_directory = "./chroma_data"
+os.makedirs(persist_directory, exist_ok=True)
+chroma_client = chromadb.PersistentClient(path=persist_directory)
 
-# Initialize Pinecone
-if not pinecone_api_key:
-    st.error("Pinecone API key is missing. Please check your .env file.")
-else:
-    pc = Pinecone(api_key=pinecone_api_key, environment="us-east-1-aws-free")
-    index = pc.Index("testing")
+# Check is Chroma Client is working
+chroma_client.heartbeat()
+
+# Get/create ChromaDB collection
+try:
+    collection = chroma_client.get_collection(name=COLLECTION_NAME)
+except Exception as e:
+    collection = chroma_client.create_collection(name=COLLECTION_NAME)
 
 def get_local_embedding(text):
     """Vectorizes text using a local Ollama embedding model."""
@@ -32,23 +38,16 @@ def get_local_embedding(text):
         print(f"Error generating embedding: {e}")
         return None
     
-def query_pinecone(embedding):
-    """Takes an embedded query and finds relevant information in Pinecone database."""
+def vector_query(embedding, top_k=3):
+    """Takes an embedded query and finds relevant information in the vector database."""
     try:
-        result = index.query(vector=embedding, top_k=3, include_metadata=True)
-        if result is None:
-            st.error("No result returned from the query.")
-            return []
-        if "matches" in result and result["matches"]:
-            texts = [match["metadata"]["text"] if match["metadata"] else "No metadata available" for match in result["matches"]]
-        else:
-            st.error("No matches found.")
-            texts = []
-        return texts
+        results = collection.query(
+            query_embeddings=embedding,
+            n_results=top_k
+        )
+        return results["documents"][0]
     except Exception as e:
-        st.error(f"Error querying Pinecone: {e}")
-        if hasattr(e, 'response'):
-            st.error(f"Response from Pinecone: {e.response.text}")
+        st.error(f"Error querying {VECTOR_DB}: {e}")
         return []
 
 def detect_text_column(df):
@@ -87,7 +86,7 @@ def process_uploaded_file(uploaded_file):
             text = row[text_column]
             embedding = get_local_embedding(text)
             if embedding:
-                upsert_to_pinecone(str(index), embedding, text)
+                vector_upsert(str(index), embedding, text)
 
     # Process PDF file
     elif file_type == "application/pdf":
@@ -101,7 +100,7 @@ def process_uploaded_file(uploaded_file):
         
         embedding = get_local_embedding(pdf_text)
         if embedding:
-            upsert_to_pinecone(uploaded_file.name, embedding, pdf_text)
+            vector_upsert(uploaded_file.name, embedding, pdf_text)
 
     # Process XML file
     elif file_type == "text/xml":
@@ -111,7 +110,7 @@ def process_uploaded_file(uploaded_file):
         
         embedding = get_local_embedding(xml_text)
         if embedding:
-            upsert_to_pinecone(uploaded_file.name, embedding, xml_text)
+            vector_upsert(uploaded_file.name, embedding, xml_text)
 
     # Process image file
     elif "image" in file_type:
@@ -123,7 +122,7 @@ def process_uploaded_file(uploaded_file):
         if img_text.strip():
             embedding = get_local_embedding(img_text)
             if embedding:
-                upsert_to_pinecone(uploaded_file.name, embedding, img_text)
+                vector_upsert(uploaded_file.name, embedding, img_text)
         
         # Handles cases when text is not found in an image
         else:
@@ -132,19 +131,14 @@ def process_uploaded_file(uploaded_file):
     else:
         st.error("Unsupported file type.")
 
-def upsert_to_pinecone(doc_id, embedding, text):
-    """Upserts the embedding into Pinecone."""
+def vector_upsert(doc_id, embedding, text):
+    """Upserts the embedding into the vector database."""
     try:
-        pinecone_data = [{
-            "id": doc_id,
-            "values": embedding,
-            "metadata": {"text": text}
-        }]
-
-
-        
-        index.upsert(vectors=pinecone_data)
-        st.success(f"Document {doc_id} added to Pinecone successfully!")
+        collection.add(
+            ids=[doc_id],
+            embeddings=[embedding],
+            documents=[text]
+        )
         
     except Exception as e:
-        st.error(f"Error uploading to Pinecone: {e}")
+        st.error(f"Error uploading to {VECTOR_DB}: {e}")
