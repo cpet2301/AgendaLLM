@@ -43,7 +43,7 @@ if prompt := st.chat_input("Ask me anything!"):
 
     if user_embedding:
     # Query Pinecone for the most relevant context
-        retrieved_texts = embedding.query_pinecone(user_embedding)
+        retrieved_texts = embedding.vector_query(user_embedding)
 
         # Prepare conversation history
         messages_for_llama = [
@@ -62,7 +62,7 @@ if prompt := st.chat_input("Ask me anything!"):
 
         try:
             # Generate response using local Ollama model
-            response = ollama.chat(model="codellama:7b", messages=messages_for_llama)
+            response = ollama.chat(model="phi3", messages=messages_for_llama)
 
             # Extract the assistant's response
             response_content = response["message"]["content"]

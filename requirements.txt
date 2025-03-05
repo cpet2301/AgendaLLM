@@ -6,6 +6,7 @@ blinker==1.8.2
 cachetools==5.5.0
 certifi==2024.8.30
 charset-normalizer==3.4.0
+chromadb==0.4.22
 click==8.1.7
 colorama==0.4.6
 distro==1.9.0
@@ -29,7 +30,7 @@ MarkupSafe==3.0.2
 mdurl==0.1.2
 narwhals==1.11.1
 numpy==1.26.2
-openai==1.52.2
+ollama
 packaging==24.1
 pandas==2.2.3
 pillow==10.4.0
