@@ -38,6 +38,9 @@ if page == "Home":
             st.markdown(message["content"])
 
     # File uploader initialization
+    with st.sidebar.container():
+        for i in range(30):
+            st.write("\n")
     with st.sidebar:
         uploaded_file = st.file_uploader(
             "Upload a file (PDF, XML, CSV, PNG, JPG, JPEG)", 
